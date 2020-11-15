@@ -1,8 +1,16 @@
 const express = require('express');
-const router = express.Router();
+const passport = require('passport');
+
 const loginController = require('./controllers/login.controller');
 
-router.post('/',
+const router = express.Router();
+
+router.get('/',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+router.get('/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
   loginController.login,
 );
 
