@@ -1,19 +1,30 @@
 const jwt = require('jsonwebtoken');
 const userService = require('../../services/user.service');
 
-const { CLIENT_URI, SECRET_TOKEN_KEY } = process.env;
-
 exports.login = async (req, res, next) => {
-  const { name, email, image } = req.user;
+  let id;
+  const { name, email, image } = req.body;
 
   try {
-    const { _id: id } = await userService.loginUser({ name, email, image });
+    const user = await userService.findUser({ email });
+
+    if (user) {
+      id = user._id;
+    } else {
+      const newUser = await userService.createUser({ name, email, image });
+      id = newUser._id;
+    }
+
     const userInfo = { id, name, email, image };
-
-    jwt.sign(userInfo, SECRET_TOKEN_KEY, (err, token) => {
+    jwt.sign(
+      userInfo,
+      process.env.SECRET_TOKEN_KEY,
+      (err, token) => {
         if (err) next(err);
-
-        res.redirect(`${CLIENT_URI}/callback?token=${token}`);
+        res.status(200).json({
+          result: 'ok',
+          data: { token, user: userInfo },
+        });
       },
     );
   } catch (err) {

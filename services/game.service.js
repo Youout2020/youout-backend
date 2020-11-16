@@ -5,7 +5,7 @@ exports.findByLocation = async ({ lat, lng, page = 1, limit = 10 }) => {
   const result = await Game.paginate({
     location: {
       $geoWithin: {
-        $center: [[lat, lng], 1] // 1 radius is 111km
+        $center: [[lng, lat], 1] // 1 radius is 111km
       }
     }
   }, { page, limit });

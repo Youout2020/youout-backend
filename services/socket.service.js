@@ -7,7 +7,7 @@ const GAMES = {};
 const USERS = {};
 
 module.exports = (server) => {
-  const io = require('socket.io')(server);
+  const io = require('socket.io').listen(server);
 
   io.on('connection', (socket) => {
     const { id } = socket;

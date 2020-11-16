@@ -6,7 +6,19 @@
 
 const app = require('../app');
 const debug = require('debug')('backend:server');
-const http = require('http');
+// const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const option = {
+  key: fs.readFileSync('./bin/key.pem', 'utf8'),
+  cert: fs.readFileSync('./bin/cert.pem', 'utf8'),
+  passphrase: '123qwe',
+  requestCert: false,
+  rejectUnauthorized: false,
+};
+
+const server = https.createServer(option, app);
+  // .listen(4001, function () { console.log('https://' + ip.address() + ':' + 4001 + '| start time : ' + new Date()); });
 
 /**
  * Get port from environment and store in Express.
@@ -19,7 +31,7 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-const server = http.createServer(app);
+// const server = http.createServer(app);
 require('../services/socket.service')(server);
 
 /**
