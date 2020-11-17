@@ -6,7 +6,6 @@
 
 const app = require('../app');
 const debug = require('debug')('backend:server');
-// const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const option = {
@@ -18,7 +17,6 @@ const option = {
 };
 
 const server = https.createServer(option, app);
-  // .listen(4001, function () { console.log('https://' + ip.address() + ':' + 4001 + '| start time : ' + new Date()); });
 
 /**
  * Get port from environment and store in Express.

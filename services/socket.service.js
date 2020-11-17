@@ -1,69 +1,161 @@
+const { update, keys, cloneDeep } = require('lodash');
+
 const SOCKET = {
   userJoin: 'USER_JOIN',
   userLeave: 'USER_LEAVE',
+  startGame: 'START_GAME',
 };
 
-const GAMES = {};
-const USERS = {};
+class SocketData {
+  constructor() {
+    this._games = {};
+    this._sockets = {};
+  }
+
+  update({ target, data }) {
+    const clone = cloneDeep(target);
+
+    keys(data).forEach((key) => {
+      const value = data[key];
+      clone[key] = value;
+    });
+
+    return clone;
+  }
+
+  initGame({ gameId }) {
+    this._games[gameId] = {
+      _id: gameId,
+      users: [],
+      isPlaying: false,
+      gameInfo: null,
+    };
+
+    return this;
+  }
+
+  getGames() {
+    return keys(this._games).map((key) => {
+      return this._games[key];
+    });
+  }
+
+  getGame({ gameId }) {
+    return cloneDeep(this._games[gameId]);
+  }
+
+  updateGame({ gameId, data }) {
+    const target = this._games[gameId];
+    return update({ target, data });
+  }
+
+  deleteGame({ gameId }) {
+    delete this._games[gameId];
+  }
+
+  initSocket({ socketId }) {
+    this._sockets[socketId] = { id: socketId };
+    return this;
+  }
+
+  getSocket({ socketId }) {
+    return cloneDeep(this._sockets[socketId]);
+  }
+
+  updateSocket({ socketId, data }) {
+    const target = this._sockets[socketId];
+    return update({ target, data });
+  }
+
+  deleteSocket({ socketId }) {
+    delete this._sockets[socketId];
+  }
+}
 
 module.exports = (server) => {
   const io = require('socket.io').listen(server);
+  const socketData = new SocketData();
 
   io.on('connection', (socket) => {
-    const { id } = socket;
-    USERS[id] = null;
+    socketData.initSocket({ socketId: socket.id });
 
     socket.on(SOCKET.userJoin, ({ gameId, userId, username }) => {
-      if (!GAMES[gameId]) GAMES[gameId] = { users: [] };
+      if (!socketData.getGame({ gameId })) {
+        socketData.initGame({ gameId });
+      }
 
-      const { id } = socket;
-      const { users } = GAMES[gameId];
+      const socketId = socket.id;
+      const game = socketData.getGame({ gameId });
+      const targetSocket = socketData.getSocket({ socketId });
 
       socket.join(gameId);
-      USERS[id] = gameId;
-      users.push({ socketId: id, userId, username });
+      targetSocket.gameId = gameId;
+      game.users.push({
+        _id: userId,
+        socketId,
+        username,
+        gameIndex: -1
+      });
 
-      io.to(gameId).emit(SOCKET.userJoin, users);
+      socketData.updateSocket({ socketId, data: targetSocket});
+      socketData.updateGame({ gameId, data: game});
+
+      io.to(gameId).emit(SOCKET.userJoin, game);
     });
 
     socket.on(SOCKET.userLeave, ({ gameId }) => {
-      if (!GAMES[gameId]) return;
+      const socketId = socket.id;
+      const game = socketData.getGame({ gameId });
+      const targetSocket = socketData.getSocket({ socketId });
 
-      const { id } = socket;
-      const { users } = GAMES[gameId];
-      const filteredUsers = users.filter((user) => user.socketId !== id);
+      if (!game) return;
 
       socket.leave(gameId);
-      USERS[id] = null;
 
-      GAMES[gameId].users = filteredUsers;
+      targetSocket.gameId = null;
+      game.users = game.users.filter((user) => (
+        user.socketId !== socketId
+      ));
 
-      if (filteredUsers.length) {
-        io.to(gameId).emit(SOCKET.userJoin, filteredUsers);
+      socketData.updateSocket({ socketId, data: targetSocket});
+      socketData.updateGame({ gameId, data: game});
+
+      if (game.users.length) {
+        io.to(gameId).emit(SOCKET.userJoin, game);
       } else {
-        delete GAMES[gameId];
+        socketData.deleteGame({ gameId });
       }
     });
 
+    socket.on(SOCKET.startGame, ({ gameId }) => {
+      const game = socketData.getGame({ gameId });
+      io.to(gameId).emit(SOCKET.startGame, game);
+    });
+
     socket.on('disconnect', () => {
-      const { id } = socket;
-      const gameId = USERS[id];
+      const socketId = socket.id;
+      const { gameId } = socketData.getSocket({ socketId });
+      const game = socketData.getGame({ gameId });
+
+      if (!game) return;
 
       if (gameId) {
-        const { users } = GAMES[gameId];
-        const filteredUsers = users.filter((user) => user.socketId !== id);
-
         socket.leave(gameId);
-        GAMES[gameId].users = filteredUsers;
 
-        if (filteredUsers.length) {
-          io.to(gameId).emit(SOCKET.userJoin, filteredUsers);
+        game.users = game.users.filter((user) => (
+          user.socketId !== socketId
+        ));
+
+        socketData.updateGame({ gameId, data: { game } });
+
+        if (game.users.length) {
+          io.to(gameId).emit(SOCKET.userJoin, game);
         } else {
-          delete GAMES[gameId];
+          socketData.deleteGame({ gameId });
         }
       }
 
-      delete USERS[id];
+      delete socketData.deleteSocket({ socketId });
     });
   });
 };
