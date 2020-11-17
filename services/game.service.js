@@ -1,6 +1,10 @@
 const Game = require('../models/Game');
 const History = require('../models/History');
 
+exports.findById = async ({ gameId }) => {
+  return await Game.findById(gameId);
+};
+
 exports.findByLocation = async ({ lat, lng, page = 1, limit = 10 }) => {
   const result = await Game.paginate({
     location: {

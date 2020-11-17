@@ -15,10 +15,7 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use(cors({
-  origin: 'https://192.168.0.57:3000',
-  credentials: true,
-}));
+app.use(cors());
 
 app.use(logger('dev'));
 app.use(express.json());
