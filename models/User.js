@@ -26,7 +26,7 @@ const UserSchema = new Schema({
   }],
   playingRoom: {
     type: ObjectId,
-    ref: 'History',
+    ref: 'Game',
   }
 }, {
   timestamps: true,

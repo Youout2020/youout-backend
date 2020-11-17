@@ -7,7 +7,6 @@ const QUERY_TYPE = {
 
 exports.sendGames = async (req, res, next) => {
   const { query } = req;
-
   switch (query.type.toLowerCase()) {
     case QUERY_TYPE.location: {
       const games = await gameService.findByLocation(query);
