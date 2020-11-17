@@ -1,9 +1,11 @@
-const { update, keys, cloneDeep } = require('lodash');
+const { keys, cloneDeep } = require('lodash');
+const { findById } = require('./game.service');
 
 const SOCKET = {
   userJoin: 'USER_JOIN',
   userLeave: 'USER_LEAVE',
-  startGame: 'START_GAME',
+  gameStart: 'GAME_START',
+  gameUpdate: 'GAME_UPDATE',
 };
 
 class SocketData {
@@ -46,7 +48,9 @@ class SocketData {
 
   updateGame({ gameId, data }) {
     const target = this._games[gameId];
-    return update({ target, data });
+    const updated = this.update({ target, data });
+
+    return this._games[gameId] = updated;
   }
 
   deleteGame({ gameId }) {
@@ -64,7 +68,9 @@ class SocketData {
 
   updateSocket({ socketId, data }) {
     const target = this._sockets[socketId];
-    return update({ target, data });
+    const updated = this.update({ target, data });
+
+    return this._sockets[socketId] = updated;
   }
 
   deleteSocket({ socketId }) {
@@ -97,7 +103,7 @@ module.exports = (server) => {
         gameIndex: -1
       });
 
-      socketData.updateSocket({ socketId, data: targetSocket});
+      socketData.updateSocket({ socketId, data: targetSocket });
       socketData.updateGame({ gameId, data: game});
 
       io.to(gameId).emit(SOCKET.userJoin, game);
@@ -127,11 +133,6 @@ module.exports = (server) => {
       }
     });
 
-    socket.on(SOCKET.startGame, ({ gameId }) => {
-      const game = socketData.getGame({ gameId });
-      io.to(gameId).emit(SOCKET.startGame, game);
-    });
-
     socket.on('disconnect', () => {
       const socketId = socket.id;
       const { gameId } = socketData.getSocket({ socketId });
@@ -146,7 +147,7 @@ module.exports = (server) => {
           user.socketId !== socketId
         ));
 
-        socketData.updateGame({ gameId, data: { game } });
+        socketData.updateGame({ gameId, data: game });
 
         if (game.users.length) {
           io.to(gameId).emit(SOCKET.userJoin, game);
@@ -156,6 +157,23 @@ module.exports = (server) => {
       }
 
       delete socketData.deleteSocket({ socketId });
+    });
+
+    socket.on(SOCKET.gameStart, async ({ gameId }) => {
+      console.log(gameId);
+      const game = socketData.getGame({ gameId });
+      game.gameInfo = await findById({ gameId });
+      io.to(gameId).emit(SOCKET.gameStart, game);
+    });
+
+    socket.on(SOCKET.gameUpdate, ({ gameId, userId }) => {
+      const game = socketData.getGame({ gameId });
+      game.users = game.users.map((user) => (
+        user._id === userId ? user.gameIndex += 1 : user
+      ));
+
+      socketData.updateGame({ gameId, data: game });
+      io.to(gameId).emit(SOCKET.gameUpdate, game);
     });
   });
 };
