@@ -1,5 +1,5 @@
-const { keys, cloneDeep } = require('lodash');
 const { findById } = require('./game.service');
+const SocketData = require('./SocketData');
 
 const SOCKET = {
   userJoin: 'USER_JOIN',
@@ -7,76 +7,6 @@ const SOCKET = {
   gameStart: 'GAME_START',
   gameUpdate: 'GAME_UPDATE',
 };
-
-class SocketData {
-  constructor() {
-    this._games = {};
-    this._sockets = {};
-  }
-
-  update({ target, data }) {
-    const clone = cloneDeep(target);
-
-    keys(data).forEach((key) => {
-      const value = data[key];
-      clone[key] = value;
-    });
-
-    return clone;
-  }
-
-  initGame({ gameId }) {
-    this._games[gameId] = {
-      _id: gameId,
-      users: [],
-      isPlaying: false,
-      gameInfo: null,
-    };
-
-    return this;
-  }
-
-  getGames() {
-    return keys(this._games).map((key) => {
-      return this._games[key];
-    });
-  }
-
-  getGame({ gameId }) {
-    return cloneDeep(this._games[gameId]);
-  }
-
-  updateGame({ gameId, data }) {
-    const target = this._games[gameId];
-    const updated = this.update({ target, data });
-
-    return this._games[gameId] = updated;
-  }
-
-  deleteGame({ gameId }) {
-    delete this._games[gameId];
-  }
-
-  initSocket({ socketId }) {
-    this._sockets[socketId] = { id: socketId };
-    return this;
-  }
-
-  getSocket({ socketId }) {
-    return cloneDeep(this._sockets[socketId]);
-  }
-
-  updateSocket({ socketId, data }) {
-    const target = this._sockets[socketId];
-    const updated = this.update({ target, data });
-
-    return this._sockets[socketId] = updated;
-  }
-
-  deleteSocket({ socketId }) {
-    delete this._sockets[socketId];
-  }
-}
 
 module.exports = (server) => {
   const io = require('socket.io').listen(server);
@@ -86,6 +16,9 @@ module.exports = (server) => {
     socketData.initSocket({ socketId: socket.id });
 
     socket.on(SOCKET.userJoin, ({ gameId, userId, username }) => {
+      SocketData.validateObjectId(userId);
+      SocketData.validateObjectId(gameId);
+
       if (!socketData.getGame({ gameId })) {
         socketData.initGame({ gameId });
       }
@@ -110,6 +43,8 @@ module.exports = (server) => {
     });
 
     socket.on(SOCKET.userLeave, ({ gameId }) => {
+      SocketData.validateObjectId(gameId);
+
       const socketId = socket.id;
       const game = socketData.getGame({ gameId });
       const targetSocket = socketData.getSocket({ socketId });
@@ -160,13 +95,20 @@ module.exports = (server) => {
     });
 
     socket.on(SOCKET.gameStart, async ({ gameId }) => {
-      console.log(gameId);
+      SocketData.validateObjectId(gameId);
+
       const game = socketData.getGame({ gameId });
       game.gameInfo = await findById({ gameId });
+
+      socketData.updateGame({ gameId, data: game });
+
       io.to(gameId).emit(SOCKET.gameStart, game);
     });
 
     socket.on(SOCKET.gameUpdate, ({ gameId, userId }) => {
+      SocketData.validateObjectId(gameId);
+      SocketData.validateObjectId(userId);
+
       const game = socketData.getGame({ gameId });
       game.users = game.users.map((user) => (
         user._id === userId ? user.gameIndex += 1 : user

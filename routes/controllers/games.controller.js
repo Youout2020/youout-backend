@@ -1,66 +1,91 @@
 const gameService = require('../../services/game.service');
 
-const QUERY_TYPE = {
-  location: 'location',
-  user: 'user',
+const gamesControllerError = (message) => {
+  console.error(`🔥 Game Controller Error => ${message}`);
 };
 
 exports.sendGame = async (req, res, next) => {
-  const { game_id: gameId } = req.params;
-  const game = await gameService.findById({ gameId });
-  res.json({ result: 'ok', data: game });
+  try {
+    const { game_id: gameId } = req.params;
+    const game = await gameService.findById({ gameId });
+
+    res.json({ result: 'ok', data: game });
+  } catch (err) {
+    gamesControllerError('sendGame');
+    next(err);
+  }
 };
 
 exports.sendGames = async (req, res, next) => {
   const { query } = req;
+  const type = query.type.toLowerCase();
 
-  switch (query.type.toLowerCase()) {
-    case QUERY_TYPE.location: {
-      const games = await gameService.findByLocation(query);
-      res.json({ result: 'ok', data: games });
+  switch (type) {
+    case 'location': {
+      try {
+        const games = await gameService.findByLocation(query);
+        res.json({ result: 'ok', data: games });
+      } catch (err) {
+        gamesControllerError('sendGames type=location');
+        next(err);
+      }
+
       return;
     };
 
-    case QUERY_TYPE.user: {
+    case 'user': {
       const { id } = res.locals.user;
-      const SELECTION_TYPE = {
-        history: 'history',
-        games: 'games',
-      };
+      const selection = query.selection.toLowerCase();
 
-      switch (query.selection.toLowerCase()) {
-        case SELECTION_TYPE.history: {
-          const games = await gameService.findByHistory({ ...query, userId: id });
-          res.json({ result: 'ok', data: games });
+      switch (selection) {
+        case 'history': {
+          try {
+            const games = await gameService.findByHistory({ ...query, userId: id });
+            res.json({ result: 'ok', data: games });
+          } catch (err) {
+            gamesControllerError('sendGames type=user&selection=history');
+          }
+
           return;
         }
 
-        case SELECTION_TYPE.games: {
-          const games = await gameService.findByUser({ ...query, userId: id });
-          res.json({ result: 'ok', data: games });
+        case 'games': {
+          try {
+            const games = await gameService.findByUser({ ...query, userId: id });
+            res.json({ result: 'ok', data: games });
+          } catch (err) {
+            gamesControllerError('sendGames type=user&selection=games');
+          }
+
           return;
         }
       }
 
-      res.status(400).json({
-        result: 'fail', message: `${query.selection} is not valid type.`
+      res.status(400);
+      res.json({
+        result: 'fail', message: `${selection} is not valid type.`
       });
       return;
     };
   }
 
-  res.status(400).json({
-    result: 'fail', message: `${query.type} is not valid type.`
+  res.status(400);
+  res.json({
+    result: 'fail', message: `${type} is not valid type.`
   });
 };
 
 exports.create = async (req, res, next) => {
   const { body } = req;
   const { id } = res.locals.user;
+
   try {
     const newGame = await gameService.create({ userId: id, body });
-    res.status(200).json({ result: 'ok', data: newGame });
+
+    res.status(200);
+    res.json({ result: 'ok', data: newGame });
   } catch (err) {
+    gamesControllerError('create');
     next(err);
   }
 };
@@ -68,6 +93,14 @@ exports.create = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   const { game_id } = req.params;
   const { body } = req;
-  const updatedGame = await gameService.update({ gameId: game_id, body });
-  res.status(201).json({ result: 'ok', data: updatedGame });
+
+  try {
+    const updatedGame = await gameService.update({ gameId: game_id, body });
+
+    res.status(201);
+    res.json({ result: 'ok', data: updatedGame });
+  } catch (err) {
+    gamesControllerError('create');
+    next(err);
+  }
 };
