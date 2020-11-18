@@ -34,10 +34,15 @@ exports.findByUser = async ({ userId, page = 1, limit = 10 }) => {
   return result;
 };
 
-exports.create = async (userId, body) => {
+exports.create = async ({ userId, body }) => {
   const result = await Game.create({
     owner: userId,
     ...body,
   });
+  return result;
+};
+
+exports.update = async ({ gameId, body }) => {
+  const result = await Game.findByIdAndUpdate(gameId, body, { new: true });
   return result;
 };

@@ -5,6 +5,12 @@ const QUERY_TYPE = {
   user: 'user',
 };
 
+exports.sendGame = async (req, res, next) => {
+  const { game_id: gameId } = req.params;
+  const game = await gameService.findById({ gameId });
+  res.json({ result: 'ok', data: game });
+};
+
 exports.sendGames = async (req, res, next) => {
   const { query } = req;
 
@@ -52,9 +58,16 @@ exports.create = async (req, res, next) => {
   const { body } = req;
   const { id } = res.locals.user;
   try {
-    const newGame = await gameService.create(id, body);
+    const newGame = await gameService.create({ userId: id, body });
     res.status(200).json({ result: 'ok', data: newGame });
   } catch (err) {
     next(err);
   }
+};
+
+exports.update = async (req, res, next) => {
+  const { game_id } = req.params;
+  const { body } = req;
+  const updatedGame = await gameService.update({ gameId: game_id, body });
+  res.status(201).json({ result: 'ok', data: updatedGame });
 };
