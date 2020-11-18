@@ -8,7 +8,7 @@ router.get('/',
   gamesController.sendGames,
 );
 
-router.post('/:game_id/update',
+router.put('/:game_id/update',
   verifyToken,
   gamesController.update,
 );
