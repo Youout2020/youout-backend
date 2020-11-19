@@ -9,7 +9,7 @@ class SocketData {
 
   validateObjectId(id) {
     if (!ObjectId.isValid(id)) {
-      throw Error(`${id} is not a ObjectId`);
+      console.error(`🔥 Error fired => ${id} is not a ObjectId`);
     }
   }
 

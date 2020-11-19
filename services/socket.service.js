@@ -16,8 +16,8 @@ module.exports = (server) => {
     socketData.initSocket({ socketId: socket.id });
 
     socket.on(SOCKET.userJoin, ({ gameId, userId, username }) => {
-      SocketData.validateObjectId(userId);
-      SocketData.validateObjectId(gameId);
+      socketData.validateObjectId(userId);
+      socketData.validateObjectId(gameId);
 
       if (!socketData.getGame({ gameId })) {
         socketData.initGame({ gameId });
@@ -43,7 +43,7 @@ module.exports = (server) => {
     });
 
     socket.on(SOCKET.userLeave, ({ gameId }) => {
-      SocketData.validateObjectId(gameId);
+      socketData.validateObjectId(gameId);
 
       const socketId = socket.id;
       const game = socketData.getGame({ gameId });
@@ -95,7 +95,7 @@ module.exports = (server) => {
     });
 
     socket.on(SOCKET.gameStart, async ({ gameId }) => {
-      SocketData.validateObjectId(gameId);
+      socketData.validateObjectId(gameId);
 
       const game = socketData.getGame({ gameId });
       game.gameInfo = await findById({ gameId });
@@ -106,8 +106,8 @@ module.exports = (server) => {
     });
 
     socket.on(SOCKET.gameUpdate, ({ gameId, userId }) => {
-      SocketData.validateObjectId(gameId);
-      SocketData.validateObjectId(userId);
+      socketData.validateObjectId(gameId);
+      socketData.validateObjectId(userId);
 
       const game = socketData.getGame({ gameId });
       game.users = game.users.map((user) => (
