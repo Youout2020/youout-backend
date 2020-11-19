@@ -67,6 +67,9 @@ module.exports = (server) => {
           }
         });
 
+        socketData.updateSocket({ socketId, data: targetSocket });
+        socketData.updateGame({ gameId, data: game });
+
         const isFinishedAll = game.users.every((user) => user.isFinished);
 
         if (isFinishedAll) {
@@ -126,9 +129,10 @@ module.exports = (server) => {
       socketData.validateObjectId(gameId);
 
       const game = socketData.getGame({ gameId });
+      console.log(game);
       game.gameInfo = await findById({ gameId });
       game.isPlaying = true;
-
+      console.log(game.gameInfo);
       socketData.updateGame({ gameId, data: game });
 
       io.to(gameId).emit(SOCKET.gameStart, game);
