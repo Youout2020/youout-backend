@@ -71,7 +71,7 @@ module.exports = (server) => {
     socket.on('disconnect', () => {
       const socketId = socket.id;
       const { gameId } = socketData.getSocket({ socketId });
-      const game = socketData.getGame({ gameId });
+      const game = gameId && socketData.getGame({ gameId });
 
       if (!game) return;
 
