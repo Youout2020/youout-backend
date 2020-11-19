@@ -1,20 +1,20 @@
 const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
+const verify = promisify(jwt.verify);
 const { SECRET_TOKEN_KEY } = process.env;
 
 const verifyToken = async (req, res, next) => {
   const { token } = req.cookies;
 
   if (!token) {
-    res.status(401).json({ result: 'fail', message: 'unauthorized' });
+    res.status(401);
+    res.json({ result: 'fail', message: 'unauthorized' });
     return;
   }
 
-  jwt.verify(token, SECRET_TOKEN_KEY, (err, decoded) => {
-    if (err) next(err);
-
-    res.locals.user = decoded;
-    next();
-  });
+  const decoded = await verify(token, SECRET_TOKEN_KEY);
+  res.locals.user = decoded;
+  next();
 };
 
 module.exports = verifyToken;
