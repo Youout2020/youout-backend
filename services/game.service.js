@@ -33,7 +33,7 @@ exports.findByLocation = async ({ lat, lng, page = 1, limit = 10 }) => {
 exports.findByHistory = async ({ userId, page = 1, limit = 10 }) => {
   try {
     const result = await History.paginate(
-      { 'users.id': userId },
+      { 'users._id': userId },
       { page, limit, sort: { createdAt: -1 }}
     );
 

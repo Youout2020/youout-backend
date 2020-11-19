@@ -68,7 +68,7 @@ module.exports = (server) => {
         });
 
         const isFinishedAll = game.users.every((user) => user.isFinished);
-        console.log(isFinishedAll);
+
         if (isFinishedAll) {
           createHistory({ users: game.users, gameId });
           socketData.deleteGame({ gameId });
