@@ -53,25 +53,40 @@ module.exports = (server) => {
       if (!game) return;
 
       socket.leave(gameId);
-
       targetSocket.gameId = null;
-      game.users = game.users.filter((user) => (
-        user.socketId !== socketId
-      ));
-
-      socketData.updateSocket({ socketId, data: targetSocket});
-      socketData.updateGame({ gameId, data: game});
-
-      if (game.users.length) {
-        io.to(gameId).emit(SOCKET.userJoin, game);
-        return;
-      }
 
       if (game.isPlaying) {
-        createHistory({ users: game.users, gameId });
-      }
+        game.users = game.users.map((user) => {
+          if (user.socketId === socketId) {
+            user.isFinished = true;
+            return user;
+          } else {
+            return user;
+          }
+        });
 
-      socketData.deleteGame({ gameId });
+        const isFinishedAll = game.users.every((user) => user.isFinished);
+        console.log(isFinishedAll);
+        if (isFinishedAll) {
+          createHistory({ users: game.users, gameId });
+          socketData.deleteGame({ gameId });
+        } else {
+          io.to(gameId).emit(SOCKET.userJoin, game);
+        }
+      } else {
+        game.users = game.users.filter((user) => (
+          user.socketId !== socketId
+        ));
+
+        socketData.updateSocket({ socketId, data: targetSocket });
+        socketData.updateGame({ gameId, data: game });
+
+        if (game.users.length) {
+          io.to(gameId).emit(SOCKET.userJoin, game);
+        } else {
+          socketData.deleteGame({ gameId });
+        }
+      }
     });
 
     socket.on('disconnect', () => {
@@ -122,6 +137,7 @@ module.exports = (server) => {
       socketData.validateObjectId(userId);
 
       const game = socketData.getGame({ gameId });
+
       game.users.map((user) => {
         if (user._id === userId) {
           user.gameIndex += 1;
