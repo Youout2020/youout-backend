@@ -1,33 +1,32 @@
 const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
 const userService = require('../../services/user.service');
+const { SECRET_TOKEN_KEY } = process.env;
+const sign = promisify(jwt.sign);
+
+const loginControllerError = (message) => {
+  console.error(`🔥 Login Controller Error => ${message}`);
+};
 
 exports.login = async (req, res, next) => {
-  let id;
-  const { name, email, image } = req.body;
+  const user = {};
 
   try {
-    const user = await userService.findUser(email);
-
-    if (user) {
-      id = user._id;
-    } else {
-      const newUser = await userService.createUser(name, email, image);
-      id = newUser._id;
-    }
-
-    const userInfo = { id, name, email, image };
-    jwt.sign(
-      userInfo,
-      process.env.SECRET_TOKEN_KEY,
-      (err, token) => {
-        if (err) next(err);
-        res.status(200).json({
-          result: 'ok',
-          data: { token, user: userInfo },
-        });
-      },
-    );
+    const { name, email, image } = req.body;
+    const { _id: id } = await userService.loginUser({ name, email, image });
+    Object.assign(user, { name, email, image, id });
   } catch (err) {
+    loginControllerError('login');
+    next(err);
+  }
+
+  try {
+    const token = await sign(user, SECRET_TOKEN_KEY);
+
+    res.status(200);
+    res.json({result: 'ok', data: { token, user }});
+  } catch (err) {
+    loginControllerError('sign token');
     next(err);
   }
 };
