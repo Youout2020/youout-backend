@@ -1,4 +1,5 @@
 const { findById } = require('./game.service');
+const { createHistory } = require('./history.service');
 const SocketData = require('./SocketData');
 
 const SOCKET = {
@@ -63,9 +64,14 @@ module.exports = (server) => {
 
       if (game.users.length) {
         io.to(gameId).emit(SOCKET.userJoin, game);
-      } else {
-        socketData.deleteGame({ gameId });
+        return;
       }
+
+      if (game.isPlaying) {
+        createHistory({ users: game.users, gameId });
+      }
+
+      socketData.deleteGame({ gameId });
     });
 
     socket.on('disconnect', () => {
@@ -86,9 +92,14 @@ module.exports = (server) => {
 
         if (game.users.length) {
           io.to(gameId).emit(SOCKET.userJoin, game);
-        } else {
-          socketData.deleteGame({ gameId });
+          return;
         }
+
+        if (game.isPlaying) {
+          createHistory({ users: game.users, gameId });
+        }
+
+        socketData.deleteGame({ gameId });
       }
 
       delete socketData.deleteSocket({ socketId });
@@ -99,6 +110,7 @@ module.exports = (server) => {
 
       const game = socketData.getGame({ gameId });
       game.gameInfo = await findById({ gameId });
+      game.isPlaying = true;
 
       socketData.updateGame({ gameId, data: game });
 
@@ -116,6 +128,12 @@ module.exports = (server) => {
 
       socketData.updateGame({ gameId, data: game });
       io.to(gameId).emit(SOCKET.gameUpdate, game);
+    });
+
+    socket.on(SOCKET.gameEnd, ({ gameId }) => {
+      const game = socketData.getGame({ gameId });
+      createHistory({ users: game.users, gameId });
+      socketData.deleteGame({ gameId });
     });
   });
 };
