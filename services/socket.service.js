@@ -160,20 +160,28 @@ module.exports = (server) => {
     });
 
     socket.on(SOCKET.gameStart, async ({ gameId }) => {
-      console.log(gameId);
       const game = socketData.getGame({ gameId });
       game.gameInfo = await findById({ gameId });
+
+      socketData.updateGame({ gameId, data: game });
+
       io.to(gameId).emit(SOCKET.gameStart, game);
     });
 
     socket.on(SOCKET.gameUpdate, ({ gameId, userId }) => {
       const game = socketData.getGame({ gameId });
-      game.users = game.users.map((user) => (
-        user._id === userId ? user.gameIndex += 1 : user
-      ));
+      game.users.map((user) => {
+        if (user._id === userId) {
+          user.gameIndex += 1;
+        }
+        return user;
+      });
 
       socketData.updateGame({ gameId, data: game });
-      io.to(gameId).emit(SOCKET.gameUpdate, game);
+      io.to(gameId).emit(SOCKET.gameUpdate, {
+        game,
+        userId,
+      });
     });
   });
 };
