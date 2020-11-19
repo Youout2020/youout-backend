@@ -7,6 +7,7 @@ const SOCKET = {
   userLeave: 'USER_LEAVE',
   gameStart: 'GAME_START',
   gameUpdate: 'GAME_UPDATE',
+  getPlayingGames: 'GET_PLAYING_GAMES',
 };
 
 module.exports = (server) => {
@@ -16,7 +17,7 @@ module.exports = (server) => {
   io.on('connection', (socket) => {
     socketData.initSocket({ socketId: socket.id });
 
-    socket.on(SOCKET.userJoin, ({ gameId, userId, username }) => {
+    socket.on(SOCKET.userJoin, ({ gameId, userId, username, image }) => {
       socketData.validateObjectId(userId);
       socketData.validateObjectId(gameId);
 
@@ -34,6 +35,7 @@ module.exports = (server) => {
         _id: userId,
         socketId,
         username,
+        image,
         gameIndex: -1
       });
 
@@ -156,6 +158,10 @@ module.exports = (server) => {
       const game = socketData.getGame({ gameId });
       createHistory({ users: game.users, gameId });
       socketData.deleteGame({ gameId });
+    });
+
+    socket.on(SOCKET.getPlayingGames, () => {
+      io.to(socket.id).emit(SOCKET.getPlayingGames, socketData.getGames());
     });
   });
 };
