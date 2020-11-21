@@ -76,3 +76,11 @@ exports.update = async ({ gameId, body }) => {
     gameServiceError('update', err);
   }
 };
+
+exports.delete = async ({ gameId }) => {
+  try {
+    return await Game.findByIdAndDelete(gameId);
+  } catch (err) {
+    gameServiceError('delete', err);
+  }
+};

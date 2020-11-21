@@ -166,5 +166,18 @@ module.exports = (server) => {
     socket.on(SOCKET.getPlayingGames, () => {
       io.to(socket.id).emit(SOCKET.getPlayingGames, socketData.getGames());
     });
+
+    socket.on('GAME_COMPLETE', ({ gameId, userId, clearTime }) => {
+      const game = socketData.getGame({ gameId });
+      game.users.map((user) => {
+        if (user.id === userId) {
+          user.clearTime = clearTime;
+        }
+
+        return user;
+      });
+
+      socketData.updateGame({ gameId, data: game });
+    });
   });
 };
