@@ -7,6 +7,7 @@ const createHistory = async ({ users, gameId }) => {
     user.lastSolvedQuiz = user.gameIndex;
     return user;
   });
+  console.log('createHistory', game);
 
   return await History.create({ users: mappedUsers, game: { id: gameId, name: game.name } });
 };
