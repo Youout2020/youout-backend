@@ -18,7 +18,7 @@ module.exports = (server) => {
   io.on('connection', (socket) => {
     socketData.initSocket({ socketId: socket.id });
 
-    socket.on(SOCKET.userJoin, ({ gameId, userId, username, image }) => {
+    socket.on(SOCKET.userJoin, ({ gameId, userId, username, image, color }) => {
       socketData.validateObjectId(userId);
       socketData.validateObjectId(gameId);
 
@@ -37,6 +37,7 @@ module.exports = (server) => {
         socketId,
         username,
         image,
+        color,
         gameIndex: -1
       });
 
