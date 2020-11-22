@@ -8,6 +8,7 @@ const SOCKET = {
   gameStart: 'GAME_START',
   gameUpdate: 'GAME_UPDATE',
   getPlayingGames: 'GET_PLAYING_GAMES',
+  gameComplete: 'GAME_COMPLETE',
 };
 
 module.exports = (server) => {
@@ -170,7 +171,7 @@ module.exports = (server) => {
       io.to(socket.id).emit(SOCKET.getPlayingGames, socketData.getGames());
     });
 
-    socket.on('GAME_COMPLETE', ({ gameId, userId, clearTime }) => {
+    socket.on(SOCKET.gameComplete, ({ gameId, userId, clearTime }) => {
       const game = socketData.getGame({ gameId });
       game.users = game.users.map((user) => {
         if (user._id === userId) {
@@ -181,6 +182,7 @@ module.exports = (server) => {
       });
 
       socketData.updateGame({ gameId, data: game });
+      io.to(gameId).emit(SOCKET.gameUpdate, { game, userId });
     });
   });
 };
