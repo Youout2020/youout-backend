@@ -12,7 +12,12 @@ const SOCKET = {
 };
 
 module.exports = (server) => {
-  const io = require('socket.io').listen(server);
+  const io = require('socket.io').listen(server, {
+    cors: {
+      origin: 'https://www.youout.site',
+      optionsSuccessStatus: 200,
+    },
+  });
   const socketData = new SocketData();
 
   io.on('connection', (socket) => {
