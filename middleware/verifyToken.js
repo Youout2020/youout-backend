@@ -4,7 +4,10 @@ const verify = promisify(jwt.verify);
 const { SECRET_TOKEN_KEY } = process.env;
 
 const verifyToken = async (req, res, next) => {
-  const token = req.headers.Authorization;
+  const token = req.headers.authorization;
+
+  console.log('token: ', token);
+  console.log('headers', req.headers);
 
   if (!token) {
     res.status(401);
