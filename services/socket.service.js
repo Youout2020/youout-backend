@@ -8,6 +8,7 @@ const SOCKET = {
   gameStart: 'GAME_START',
   gameUpdate: 'GAME_UPDATE',
   getPlayingGames: 'GET_PLAYING_GAMES',
+  gameComplete: 'GAME_COMPLETE',
 };
 
 module.exports = (server) => {
@@ -17,7 +18,7 @@ module.exports = (server) => {
   io.on('connection', (socket) => {
     socketData.initSocket({ socketId: socket.id });
 
-    socket.on(SOCKET.userJoin, ({ gameId, userId, username, image }) => {
+    socket.on(SOCKET.userJoin, ({ gameId, userId, username, image, color }) => {
       socketData.validateObjectId(userId);
       socketData.validateObjectId(gameId);
 
@@ -36,6 +37,7 @@ module.exports = (server) => {
         socketId,
         username,
         image,
+        color,
         gameIndex: -1
       });
 
@@ -71,9 +73,12 @@ module.exports = (server) => {
         socketData.updateGame({ gameId, data: game });
 
         const isFinishedAll = game.users.every((user) => user.isFinished);
+        const isCleared = game.users.some((user) => user.clearTime);
 
-        if (isFinishedAll) {
+        if (isFinishedAll && isCleared) {
           createHistory({ users: game.users, gameId });
+          socketData.deleteGame({ gameId });
+        } else if (isFinishedAll) {
           socketData.deleteGame({ gameId });
         } else {
           io.to(gameId).emit(SOCKET.userJoin, game);
@@ -165,6 +170,20 @@ module.exports = (server) => {
 
     socket.on(SOCKET.getPlayingGames, () => {
       io.to(socket.id).emit(SOCKET.getPlayingGames, socketData.getGames());
+    });
+
+    socket.on(SOCKET.gameComplete, ({ gameId, userId, clearTime }) => {
+      const game = socketData.getGame({ gameId });
+      game.users = game.users.map((user) => {
+        if (user._id === userId) {
+          user.clearTime = clearTime;
+        }
+
+        return user;
+      });
+
+      socketData.updateGame({ gameId, data: game });
+      io.to(gameId).emit(SOCKET.gameUpdate, { game, userId });
     });
   });
 };
