@@ -4,7 +4,7 @@ const verify = promisify(jwt.verify);
 const { SECRET_TOKEN_KEY } = process.env;
 
 const verifyToken = async (req, res, next) => {
-  const { token } = req.cookies;
+  const { token } = req.headers;
 
   if (!token) {
     res.status(401);

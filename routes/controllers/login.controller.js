@@ -24,7 +24,6 @@ exports.login = async (req, res, next) => {
     const token = await sign(user, SECRET_TOKEN_KEY);
 
     res.status(200);
-    // res.setHeader('Access-Control-Allow-Credentials', true);
     res.json({result: 'ok', data: { token, user }});
   } catch (err) {
     loginControllerError('sign token');
