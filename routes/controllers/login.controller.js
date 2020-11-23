@@ -11,20 +11,21 @@ const loginControllerError = (message) => {
 exports.login = async (req, res, next) => {
   const user = {};
 
-  try {
-    const { name, email, image } = req.body;
-    const { _id: id } = await userService.loginUser({ name, email, image });
-    Object.assign(user, { name, email, image, id });
-  } catch (err) {
-    loginControllerError('login');
-    next(err);
-  }
+  // try {
+  //   const { name, email, image } = req.body;
+  //   const { _id: id } = await userService.loginUser({ name, email, image });
+  //   Object.assign(user, { name, email, image, id });
+  // } catch (err) {
+  //   loginControllerError('login');
+  //   next(err);
+  // }
 
   try {
-    const token = await sign(user, SECRET_TOKEN_KEY);
+    // const token = await sign(user, SECRET_TOKEN_KEY);
 
     res.status(200);
-    res.json({result: 'ok', data: { token, user }});
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.json({result: 'ok'});
   } catch (err) {
     loginControllerError('sign token');
     next(err);

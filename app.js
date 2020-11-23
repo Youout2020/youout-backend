@@ -19,6 +19,7 @@ app.use(cors({
   origin: 'https://www.youout.site',
   optionsSuccessStatus: 200,
   allowedHeaders: true,
+  credentials: true,
 }));
 
 app.use(logger('dev'));
