@@ -6,6 +6,9 @@
 
 const app = require('../app');
 const debug = require('debug')('backend:server');
+const http = require('http');
+
+const server = http.createServer(app);
 
 /**
  * Get port from environment and store in Express.
