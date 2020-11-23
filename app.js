@@ -18,7 +18,7 @@ app.set('view engine', 'pug');
 app.use(cors({
   origin: 'https://www.youout.site',
   optionsSuccessStatus: 200,
-  allowedHeaders: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
 
