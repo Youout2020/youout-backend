@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === 'development') {
   const option = {
     key: fs.readFileSync('./bin/key.pem', 'utf8'),
     cert: fs.readFileSync('./bin/cert.pem', 'utf8'),
-    passphrase: '123qwe',
+    passphrase: process.env.OPENSSL_PASSPHRASE,
     requestCert: false,
     rejectUnauthorized: false,
   };
