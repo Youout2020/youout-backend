@@ -179,6 +179,9 @@ module.exports = (server) => {
 
     socket.on(SOCKET.gameComplete, ({ gameId, userId, clearTime }) => {
       const game = socketData.getGame({ gameId });
+
+      if (!game) return;
+
       game.users = game.users.map((user) => {
         if (user._id === userId) {
           user.clearTime = clearTime;
