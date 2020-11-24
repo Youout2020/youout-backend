@@ -8,6 +8,7 @@ const app = require('../app');
 const debug = require('debug')('backend:server');
 const https = require('https');
 const fs = require('fs');
+const http = require('http');
 const option = {
   key: fs.readFileSync('./bin/key.pem', 'utf8'),
   cert: fs.readFileSync('./bin/cert.pem', 'utf8'),
@@ -16,7 +17,9 @@ const option = {
   rejectUnauthorized: false,
 };
 
-const server = https.createServer(option, app);
+const server = process.env.NODE_ENV !== 'production'
+  ? https.createServer(option, app)
+  : http.createServer(app);
 
 /**
  * Get port from environment and store in Express.
@@ -29,7 +32,6 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-// const server = http.createServer(app);
 require('../services/socket.service')(server);
 
 /**
