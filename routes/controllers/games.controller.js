@@ -109,7 +109,6 @@ exports.delete = async (req, res, next) => {
   const { game_id } = req.params;
 
   try {
-    console.log(game_id);
     await gameService.delete({ gameId: game_id });
 
     res.status(204);

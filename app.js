@@ -12,11 +12,10 @@ const indexRouter = require('./routes/index');
 
 const app = express();
 
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
-
 app.use(cors({
-  origin: 'https://www.youout.site',
+  origin: process.env.NODE_ENV !== 'production'
+    ? 'https://192.168.0.57:3000'
+    : 'https://www.youout.site',
   optionsSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
