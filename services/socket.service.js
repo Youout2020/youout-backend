@@ -12,186 +12,190 @@ const SOCKET = {
 };
 
 module.exports = (server) => {
-  const io = require('socket.io').listen(server, {
-    cors: {
-      origin: 'https://www.youout.site',
-      optionsSuccessStatus: 200,
-    },
-  });
-  const socketData = new SocketData();
-
-  io.on('connection', (socket) => {
-    socketData.initSocket({ socketId: socket.id });
-
-    socket.on(SOCKET.userJoin, ({ gameId, userId, username, image, color }) => {
-      socketData.validateObjectId(userId);
-      socketData.validateObjectId(gameId);
-
-      if (!socketData.getGame({ gameId })) {
-        socketData.initGame({ gameId });
-      }
-
-      const socketId = socket.id;
-      const game = socketData.getGame({ gameId });
-      const targetSocket = socketData.getSocket({ socketId });
-
-      socket.join(gameId);
-      targetSocket.gameId = gameId;
-      game.users.push({
-        _id: userId,
-        socketId,
-        username,
-        image,
-        color,
-        gameIndex: -1
-      });
-
-      socketData.updateSocket({ socketId, data: targetSocket });
-      socketData.updateGame({ gameId, data: game});
-
-      io.to(gameId).emit(SOCKET.userJoin, game);
+  try {
+    const io = require('socket.io').listen(server, {
+      cors: {
+        origin: process.env.ORIGIN_URI_PROD,
+        optionsSuccessStatus: 200,
+      },
     });
+    const socketData = new SocketData();
 
-    socket.on(SOCKET.userLeave, ({ gameId }) => {
-      socketData.validateObjectId(gameId);
+    io.on('connection', (socket) => {
+      socketData.initSocket({ socketId: socket.id });
 
-      const socketId = socket.id;
-      const game = socketData.getGame({ gameId });
-      const targetSocket = socketData.getSocket({ socketId });
+      socket.on(SOCKET.userJoin, ({ gameId, userId, username, image, color }) => {
+        socketData.validateObjectId(userId);
+        socketData.validateObjectId(gameId);
 
-      if (!game) return;
+        if (!socketData.getGame({ gameId })) {
+          socketData.initGame({ gameId });
+        }
 
-      socket.leave(gameId);
-      targetSocket.gameId = null;
+        const socketId = socket.id;
+        const game = socketData.getGame({ gameId });
+        const targetSocket = socketData.getSocket({ socketId });
 
-      if (game.isPlaying) {
-        game.users = game.users.map((user) => {
-          if (user.socketId === socketId) {
-            user.isFinished = true;
-            return user;
-          } else {
-            return user;
-          }
+        socket.join(gameId);
+        targetSocket.gameId = gameId;
+        game.users.push({
+          _id: userId,
+          socketId,
+          username,
+          image,
+          color,
+          gameIndex: -1
         });
 
         socketData.updateSocket({ socketId, data: targetSocket });
-        socketData.updateGame({ gameId, data: game });
+        socketData.updateGame({ gameId, data: game});
 
-        const isFinishedAll = game.users.every((user) => user.isFinished);
-        const isCleared = game.users.some((user) => user.clearTime);
+        io.to(gameId).emit(SOCKET.userJoin, game);
+      });
 
-        if (isFinishedAll && isCleared) {
-          createHistory({ users: game.users, gameId });
-          socketData.deleteGame({ gameId });
-        } else if (isFinishedAll) {
-          socketData.deleteGame({ gameId });
-        } else {
-          io.to(gameId).emit(SOCKET.userJoin, game);
-        }
-      } else {
-        game.users = game.users.filter((user) => (
-          user.socketId !== socketId
-        ));
+      socket.on(SOCKET.userLeave, ({ gameId }) => {
+        socketData.validateObjectId(gameId);
 
-        socketData.updateSocket({ socketId, data: targetSocket });
-        socketData.updateGame({ gameId, data: game });
+        const socketId = socket.id;
+        const game = socketData.getGame({ gameId });
+        const targetSocket = socketData.getSocket({ socketId });
 
-        if (game.users.length) {
-          io.to(gameId).emit(SOCKET.userJoin, game);
-        } else {
-          socketData.deleteGame({ gameId });
-        }
-      }
-    });
+        if (!game) return;
 
-    socket.on('disconnect', () => {
-      const socketId = socket.id;
-      const { gameId } = socketData.getSocket({ socketId });
-      const game = gameId && socketData.getGame({ gameId });
-
-      if (!game) return;
-
-      if (gameId) {
         socket.leave(gameId);
-
-        game.users = game.users.filter((user) => (
-          user.socketId !== socketId
-        ));
-
-        socketData.updateGame({ gameId, data: game });
-
-        if (game.users.length) {
-          io.to(gameId).emit(SOCKET.userJoin, game);
-          return;
-        }
+        targetSocket.gameId = null;
 
         if (game.isPlaying) {
-          createHistory({ users: game.users, gameId });
+          game.users = game.users.map((user) => {
+            if (user.socketId === socketId) {
+              user.isFinished = true;
+              return user;
+            } else {
+              return user;
+            }
+          });
+
+          socketData.updateSocket({ socketId, data: targetSocket });
+          socketData.updateGame({ gameId, data: game });
+
+          const isFinishedAll = game.users.every((user) => user.isFinished);
+          const isCleared = game.users.some((user) => user.clearTime);
+
+          if (isFinishedAll && isCleared) {
+            createHistory({ users: game.users, gameId });
+            socketData.deleteGame({ gameId });
+          } else if (isFinishedAll) {
+            socketData.deleteGame({ gameId });
+          } else {
+            io.to(gameId).emit(SOCKET.userJoin, game);
+          }
+        } else {
+          game.users = game.users.filter((user) => (
+            user.socketId !== socketId
+          ));
+
+          socketData.updateSocket({ socketId, data: targetSocket });
+          socketData.updateGame({ gameId, data: game });
+
+          if (game.users.length) {
+            io.to(gameId).emit(SOCKET.userJoin, game);
+          } else {
+            socketData.deleteGame({ gameId });
+          }
+        }
+      });
+
+      socket.on('disconnect', () => {
+        const socketId = socket.id;
+        const { gameId } = socketData.getSocket({ socketId });
+        const game = gameId && socketData.getGame({ gameId });
+
+        if (!game) return;
+
+        if (gameId) {
+          socket.leave(gameId);
+
+          game.users = game.users.filter((user) => (
+            user.socketId !== socketId
+          ));
+
+          socketData.updateGame({ gameId, data: game });
+
+          if (game.users.length) {
+            io.to(gameId).emit(SOCKET.userJoin, game);
+            return;
+          }
+
+          if (game.isPlaying) {
+            createHistory({ users: game.users, gameId });
+          }
+
+          socketData.deleteGame({ gameId });
         }
 
+        delete socketData.deleteSocket({ socketId });
+      });
+
+      socket.on(SOCKET.gameStart, async ({ gameId }) => {
+        socketData.validateObjectId(gameId);
+
+        const game = socketData.getGame({ gameId });
+
+        game.gameInfo = await findById({ gameId });
+        game.isPlaying = true;
+        socketData.updateGame({ gameId, data: game });
+
+        io.to(gameId).emit(SOCKET.gameStart, game);
+      });
+
+      socket.on(SOCKET.gameUpdate, ({ gameId, userId }) => {
+        socketData.validateObjectId(gameId);
+        socketData.validateObjectId(userId);
+
+        const game = socketData.getGame({ gameId });
+
+        game.users.map((user) => {
+          if (user._id === userId) {
+            user.gameIndex += 1;
+          }
+          return user;
+        });
+
+        socketData.updateGame({ gameId, data: game });
+        io.to(gameId).emit(SOCKET.gameUpdate, {
+          game,
+          userId,
+        });
+      });
+
+      socket.on(SOCKET.gameEnd, ({ gameId }) => {
+        const game = socketData.getGame({ gameId });
+        createHistory({ users: game.users, gameId });
         socketData.deleteGame({ gameId });
-      }
-
-      delete socketData.deleteSocket({ socketId });
-    });
-
-    socket.on(SOCKET.gameStart, async ({ gameId }) => {
-      socketData.validateObjectId(gameId);
-
-      const game = socketData.getGame({ gameId });
-
-      game.gameInfo = await findById({ gameId });
-      game.isPlaying = true;
-      socketData.updateGame({ gameId, data: game });
-
-      io.to(gameId).emit(SOCKET.gameStart, game);
-    });
-
-    socket.on(SOCKET.gameUpdate, ({ gameId, userId }) => {
-      socketData.validateObjectId(gameId);
-      socketData.validateObjectId(userId);
-
-      const game = socketData.getGame({ gameId });
-
-      game.users.map((user) => {
-        if (user._id === userId) {
-          user.gameIndex += 1;
-        }
-        return user;
       });
 
-      socketData.updateGame({ gameId, data: game });
-      io.to(gameId).emit(SOCKET.gameUpdate, {
-        game,
-        userId,
-      });
-    });
-
-    socket.on(SOCKET.gameEnd, ({ gameId }) => {
-      const game = socketData.getGame({ gameId });
-      createHistory({ users: game.users, gameId });
-      socketData.deleteGame({ gameId });
-    });
-
-    socket.on(SOCKET.getPlayingGames, () => {
-      io.to(socket.id).emit(SOCKET.getPlayingGames, socketData.getGames());
-    });
-
-    socket.on(SOCKET.gameComplete, ({ gameId, userId, clearTime }) => {
-      const game = socketData.getGame({ gameId });
-
-      if (!game) return;
-
-      game.users = game.users.map((user) => {
-        if (user._id === userId) {
-          user.clearTime = clearTime;
-        }
-
-        return user;
+      socket.on(SOCKET.getPlayingGames, () => {
+        io.to(socket.id).emit(SOCKET.getPlayingGames, socketData.getGames());
       });
 
-      socketData.updateGame({ gameId, data: game });
-      io.to(gameId).emit(SOCKET.gameUpdate, { game, userId });
+      socket.on(SOCKET.gameComplete, ({ gameId, userId, clearTime }) => {
+        const game = socketData.getGame({ gameId });
+
+        if (!game) return;
+
+        game.users = game.users.map((user) => {
+          if (user._id === userId) {
+            user.clearTime = clearTime;
+          }
+
+          return user;
+        });
+
+        socketData.updateGame({ gameId, data: game });
+        io.to(gameId).emit(SOCKET.gameUpdate, { game, userId });
+      });
     });
-  });
+  } catch (error) {
+    console.error(error);
+  }
 };
