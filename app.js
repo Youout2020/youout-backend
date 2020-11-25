@@ -14,8 +14,8 @@ const app = express();
 
 app.use(cors({
   origin: process.env.NODE_ENV !== 'production'
-    ? 'https://192.168.0.57:3000'
-    : 'https://www.youout.site',
+    ? process.env.ORIGIN_URI_DEV
+    : process.env.ORIGIN_URI_PROD,
   optionsSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

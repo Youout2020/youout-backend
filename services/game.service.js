@@ -1,86 +1,53 @@
 const Game = require('../models/Game');
 const History = require('../models/History');
 
-const gameServiceError = (message, err) => {
-  console.error(`🔥 Game Service Error => ${message}`);
-  throw Error(err);
-};
-
 exports.findById = async ({ gameId }) => {
-  try {
-    return await Game.findById(gameId);
-  } catch (err) {
-    gameServiceError('findById', err);
-  }
+  return await Game.findById(gameId);
 };
 
 exports.findByLocation = async ({ lat, lng, page = 1, limit = 10 }) => {
-  try {
-    const result = await Game.paginate({
-      location: {
-        $geoWithin: {
-          $center: [[lng, lat], 1] // 1 radius is 111km
-        }
-      }
-    }, { page, limit });
+  const result = await Game.paginate({
+    location: {
+      $geoWithin: {
+        $center: [[lng, lat], 1] // 1 radius is 111km
+      },
+    },
+  }, { page, limit });
 
-    return result;
-  } catch (err) {
-    gameServiceError('findByLocation', err);
-  }
+  return result;
 };
 
 exports.findByHistory = async ({ userId, page = 1, limit = 10 }) => {
-  try {
-    const result = await History.paginate(
-      { 'users._id': userId },
-      { page, limit, sort: { createdAt: -1 }}
-    );
+  const result = await History.paginate(
+    { 'users._id': userId },
+    { page, limit, sort: { createdAt: -1 }},
+  );
 
-    return result;
-  } catch (err) {
-    gameServiceError('findByHistory', err);
-  }
+  return result;
 };
 
 exports.findByUser = async ({ userId, page = 1, limit = 10 }) => {
-  try {
-    const result = await Game.paginate(
-      { owner: userId },
-      { page, limit, sort: { createdAt: -1 } },
-    );
+  const result = await Game.paginate(
+    { owner: userId },
+    { page, limit, sort: { createdAt: -1 } },
+  );
 
-    return result;
-  } catch (err) {
-    gameServiceError('findByUser', err);
-  }
+  return result;
 };
 
 exports.create = async ({ userId, body }) => {
-  try {
-    const result = await Game.create({
-      owner: userId,
-      ...body,
-    });
+  const result = await Game.create({
+    owner: userId,
+    ...body,
+  });
 
-    return result;
-  } catch (err) {
-    gameServiceError('create', err);
-  }
+  return result;
 };
 
 exports.update = async ({ gameId, body }) => {
-  try {
-    return await Game.findByIdAndUpdate(gameId, body, { new: true });
-  } catch (err) {
-    gameServiceError('update', err);
-  }
+  return await Game.findByIdAndUpdate(gameId, body, { new: true });
 };
 
 exports.delete = async ({ gameId }) => {
-  try {
-    return await Game.findByIdAndDelete(gameId);
-  } catch (err) {
-    gameServiceError('delete', err);
-  }
+  return await Game.findByIdAndDelete(gameId);
 };

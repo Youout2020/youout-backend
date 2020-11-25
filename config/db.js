@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const { ATLAS_DB_ID, ATLAS_DB_PASSWORD } = process.env;
 const dbUri = `mongodb+srv://${ATLAS_DB_ID}:${ATLAS_DB_PASSWORD}@youout.urfkx.mongodb.net/youout?retryWrites=true&w=majority`;
 

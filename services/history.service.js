@@ -1,5 +1,5 @@
-const History = require('../models/History');
 const Game = require('../models/Game');
+const History = require('../models/History');
 
 const createHistory = async ({ users, gameId }) => {
   const game = await Game.findById(gameId);
