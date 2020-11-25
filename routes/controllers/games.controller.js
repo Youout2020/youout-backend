@@ -1,4 +1,5 @@
 const gameService = require('../../services/game.service');
+const { RES_RESULT } = require('../../constants');
 
 const gamesControllerError = (message) => {
   console.error(`🔥 Game Controller Error => ${message}`);
@@ -9,7 +10,7 @@ exports.sendGame = async (req, res, next) => {
     const { game_id: gameId } = req.params;
     const game = await gameService.findById({ gameId });
 
-    res.json({ result: 'ok', data: game });
+    res.json({ result: RES_RESULT.OK, data: game });
   } catch (err) {
     gamesControllerError('sendGame');
     next(err);
@@ -24,7 +25,7 @@ exports.sendGames = async (req, res, next) => {
     case 'location': {
       try {
         const games = await gameService.findByLocation(query);
-        res.json({ result: 'ok', data: games });
+        res.json({ result: RES_RESULT.OK, data: games });
       } catch (err) {
         gamesControllerError('sendGames type=location');
         next(err);
@@ -41,7 +42,7 @@ exports.sendGames = async (req, res, next) => {
         case 'history': {
           try {
             const games = await gameService.findByHistory({ ...query, userId: id });
-            res.json({ result: 'ok', data: games });
+            res.json({ result: RES_RESULT.OK, data: games });
           } catch (err) {
             gamesControllerError('sendGames type=user&selection=history');
           }
@@ -52,7 +53,7 @@ exports.sendGames = async (req, res, next) => {
         case 'games': {
           try {
             const games = await gameService.findByUser({ ...query, userId: id });
-            res.json({ result: 'ok', data: games });
+            res.json({ result: RES_RESULT.OK, data: games });
           } catch (err) {
             gamesControllerError('sendGames type=user&selection=games');
           }
@@ -63,7 +64,7 @@ exports.sendGames = async (req, res, next) => {
 
       res.status(400);
       res.json({
-        result: 'fail', message: `${selection} is not valid type.`
+        result: RES_RESULT.FAIL, message: `${selection} is not valid type.`
       });
       return;
     };
@@ -71,7 +72,7 @@ exports.sendGames = async (req, res, next) => {
 
   res.status(400);
   res.json({
-    result: 'fail', message: `${type} is not valid type.`
+    result: RES_RESULT.FAIL, message: `${type} is not valid type.`
   });
 };
 
@@ -83,7 +84,7 @@ exports.create = async (req, res, next) => {
     const newGame = await gameService.create({ userId: id, body });
 
     res.status(200);
-    res.json({ result: 'ok', data: newGame });
+    res.json({ result: RES_RESULT.OK, data: newGame });
   } catch (err) {
     gamesControllerError('create');
     next(err);
@@ -98,7 +99,7 @@ exports.update = async (req, res, next) => {
     const updatedGame = await gameService.update({ gameId: game_id, body });
 
     res.status(201);
-    res.json({ result: 'ok', data: updatedGame });
+    res.json({ result: RES_RESULT.OK, data: updatedGame });
   } catch (err) {
     gamesControllerError('create');
     next(err);
@@ -112,7 +113,7 @@ exports.delete = async (req, res, next) => {
     await gameService.delete({ gameId: game_id });
 
     res.status(204);
-    res.json({ result: 'ok' });
+    res.json({ result: RES_RESULT.OK });
   } catch (err) {
     gamesControllerError('create');
     next(err);

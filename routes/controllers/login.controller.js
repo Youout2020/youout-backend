@@ -1,8 +1,10 @@
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const userService = require('../../services/user.service');
-const { SECRET_TOKEN_KEY } = process.env;
+const { RES_RESULT } = require('../../constants');
+
 const sign = promisify(jwt.sign);
+const { SECRET_TOKEN_KEY } = process.env;
 
 const loginControllerError = (message) => {
   console.error(`🔥 Login Controller Error => ${message}`);
@@ -24,7 +26,7 @@ exports.login = async (req, res, next) => {
     const token = await sign(user, SECRET_TOKEN_KEY);
 
     res.status(200);
-    res.json({result: 'ok', data: { token, user }});
+    res.json({result: RES_RESULT.OK, data: { token, user }});
   } catch (err) {
     loginControllerError('sign token');
     next(err);
