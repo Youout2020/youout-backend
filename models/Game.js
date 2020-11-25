@@ -27,21 +27,6 @@ const QuizListSchema = new Schema({
   },
 });
 
-const GameUsersSchema = new Schema({
-  id: {
-    type: ObjectId,
-    ref: 'User',
-  },
-  clearTime: {
-    type: Number,
-    default: null,
-  },
-  lastSolvedQuiz: {
-    type: Number,
-    default: null,
-  },
-});
-
 const PointSchema = new mongoose.Schema({
   type: {
     type: String,
@@ -78,20 +63,6 @@ const GameSchema = new Schema({
     type: [QuizListSchema],
     default: [],
     required: true,
-  },
-  status: {
-    users: {
-      type: [GameUsersSchema],
-      default: [],
-    },
-    isPlaying: {
-      type: Boolean,
-      default: false,
-    },
-    startTime: {
-      type: Date,
-      default: Date.now(),
-    },
   },
 }, {
   timestamps: true,
