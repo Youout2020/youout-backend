@@ -7,8 +7,8 @@
 const app = require('../app');
 const debug = require('debug')('backend:server');
 const https = require('https');
-const fs = require('fs');
 const http = require('http');
+const fs = require('fs');
 
 let server;
 if (process.env.NODE_ENV === 'development') {

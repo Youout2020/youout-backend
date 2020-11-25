@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const gamesController = require('./controllers/games.controller');
 const verifyToken = require('../middleware/verifyToken');
+const gamesController = require('./controllers/games.controller');
 
 router.get('/', verifyToken, gamesController.sendGames);
 router.post('/', verifyToken, gamesController.create);
