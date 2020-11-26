@@ -54,55 +54,56 @@ module.exports = (server) => {
       });
 
       socket.on(SOCKET.userLeave, ({ gameId }) => {
-        socketData.validateObjectId(gameId);
+        console.log('123', gameId);
+        // socketData.validateObjectId(gameId);
 
-        const socketId = socket.id;
-        const game = socketData.getGame({ gameId });
-        const targetSocket = socketData.getSocket({ socketId });
+        // const socketId = socket.id;
+        // const game = socketData.getGame({ gameId });
+        // const targetSocket = socketData.getSocket({ socketId });
 
-        if (!game) return;
+        // if (!game) return;
 
-        socket.leave(gameId);
-        targetSocket.gameId = null;
+        // socket.leave(gameId);
+        // targetSocket.gameId = null;
 
-        if (game.isPlaying) {
-          game.users = game.users.map((user) => {
-            if (user.socketId === socketId) {
-              user.isFinished = true;
-              return user;
-            } else {
-              return user;
-            }
-          });
+        // if (game.isPlaying) {
+        //   game.users = game.users.map((user) => {
+        //     if (user.socketId === socketId) {
+        //       user.isFinished = true;
+        //       return user;
+        //     } else {
+        //       return user;
+        //     }
+        //   });
 
-          socketData.updateSocket({ socketId, data: targetSocket });
-          socketData.updateGame({ gameId, data: game });
+        //   socketData.updateSocket({ socketId, data: targetSocket });
+        //   socketData.updateGame({ gameId, data: game });
 
-          const isFinishedAll = game.users.every((user) => user.isFinished);
-          const isCleared = game.users.some((user) => user.clearTime);
+        //   const isFinishedAll = game.users.every((user) => user.isFinished);
+        //   const isCleared = game.users.some((user) => user.clearTime);
 
-          if (isFinishedAll && isCleared) {
-            createHistory({ users: game.users, gameId });
-            socketData.deleteGame({ gameId });
-          } else if (isFinishedAll) {
-            socketData.deleteGame({ gameId });
-          } else {
-            io.to(gameId).emit(SOCKET.userJoin, game);
-          }
-        } else {
-          game.users = game.users.filter((user) => (
-            user.socketId !== socketId
-          ));
+        //   if (isFinishedAll && isCleared) {
+        //     createHistory({ users: game.users, gameId });
+        //     socketData.deleteGame({ gameId });
+        //   } else if (isFinishedAll) {
+        //     socketData.deleteGame({ gameId });
+        //   } else {
+        //     io.to(gameId).emit(SOCKET.userJoin, game);
+        //   }
+        // } else {
+        //   game.users = game.users.filter((user) => (
+        //     user.socketId !== socketId
+        //   ));
 
-          socketData.updateSocket({ socketId, data: targetSocket });
-          socketData.updateGame({ gameId, data: game });
+        //   socketData.updateSocket({ socketId, data: targetSocket });
+        //   socketData.updateGame({ gameId, data: game });
 
-          if (game.users.length) {
-            io.to(gameId).emit(SOCKET.userJoin, game);
-          } else {
-            socketData.deleteGame({ gameId });
-          }
-        }
+        //   if (game.users.length) {
+        //     io.to(gameId).emit(SOCKET.userJoin, game);
+        //   } else {
+        //     socketData.deleteGame({ gameId });
+        //   }
+        // }
       });
 
       socket.on('disconnect', () => {
