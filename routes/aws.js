@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const historiesController = require('./controllers/histories.controller');
+const awsController = require('./controllers/aws.controller');
 const verifyToken = require('../middleware/verifyToken');
 
-router.get('/:history_id', verifyToken, historiesController.sendHistory);
+router.post('/rekognition', verifyToken, awsController.rekognition);
 
 module.exports = router;
