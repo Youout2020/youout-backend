@@ -15,6 +15,8 @@ const client = new AWS.Rekognition(config);
 exports.rekognition = (req, res, next) => {
   const { datauri } = req.body;
 
+  console.log(datauri.slice(0, 200));
+
   const buffer = Buffer.from(datauri.split(',')[1], 'base64');
   const params = {
     Image: {
