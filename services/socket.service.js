@@ -12,19 +12,19 @@ const SOCKET = {
 };
 
 module.exports = (server) => {
-  try {
-    const io = require('socket.io').listen(server, {
-      cors: {
-        origin: process.env.ORIGIN_URI_PROD,
-        optionsSuccessStatus: 200,
-      },
-    });
-    const socketData = new SocketData();
+  const io = require('socket.io').listen(server, {
+    cors: {
+      origin: process.env.ORIGIN_URI_PROD,
+      optionsSuccessStatus: 200,
+    },
+  });
+  const socketData = new SocketData();
 
-    io.on('connection', (socket) => {
-      socketData.initSocket({ socketId: socket.id });
+  io.on('connection', (socket) => {
+    socketData.initSocket({ socketId: socket.id });
 
-      socket.on(SOCKET.userJoin, ({ gameId, userId, username, image, color }) => {
+    socket.on(SOCKET.userJoin, ({ gameId, userId, username, image, color }) => {
+      try {
         socketData.validateObjectId(userId);
         socketData.validateObjectId(gameId);
 
@@ -51,9 +51,13 @@ module.exports = (server) => {
         socketData.updateGame({ gameId, data: game});
 
         io.to(gameId).emit(SOCKET.userJoin, game);
-      });
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-      socket.on(SOCKET.userLeave, ({ gameId }) => {
+    socket.on(SOCKET.userLeave, ({ gameId }) => {
+      try {
         socketData.validateObjectId(gameId);
 
         const socketId = socket.id;
@@ -103,9 +107,13 @@ module.exports = (server) => {
             socketData.deleteGame({ gameId });
           }
         }
-      });
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-      socket.on('disconnect', () => {
+    socket.on('disconnect', () => {
+      try {
         const socketId = socket.id;
         const { gameId } = socketData.getSocket({ socketId });
         const game = gameId && socketData.getGame({ gameId });
@@ -134,9 +142,13 @@ module.exports = (server) => {
         }
 
         delete socketData.deleteSocket({ socketId });
-      });
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-      socket.on(SOCKET.gameStart, async ({ gameId }) => {
+    socket.on(SOCKET.gameStart, async ({ gameId }) => {
+      try {
         socketData.validateObjectId(gameId);
 
         const game = socketData.getGame({ gameId });
@@ -146,9 +158,13 @@ module.exports = (server) => {
         socketData.updateGame({ gameId, data: game });
 
         io.to(gameId).emit(SOCKET.gameStart, game);
-      });
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-      socket.on(SOCKET.gameUpdate, ({ gameId, userId }) => {
+    socket.on(SOCKET.gameUpdate, ({ gameId, userId }) => {
+      try {
         socketData.validateObjectId(gameId);
         socketData.validateObjectId(userId);
 
@@ -166,19 +182,31 @@ module.exports = (server) => {
           game,
           userId,
         });
-      });
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-      socket.on(SOCKET.gameEnd, ({ gameId }) => {
+    socket.on(SOCKET.gameEnd, ({ gameId }) => {
+      try {
         const game = socketData.getGame({ gameId });
         createHistory({ users: game.users, gameId });
         socketData.deleteGame({ gameId });
-      });
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-      socket.on(SOCKET.getPlayingGames, () => {
+    socket.on(SOCKET.getPlayingGames, () => {
+      try {
         io.to(socket.id).emit(SOCKET.getPlayingGames, socketData.getGames());
-      });
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-      socket.on(SOCKET.gameComplete, ({ gameId, userId, clearTime }) => {
+    socket.on(SOCKET.gameComplete, ({ gameId, userId, clearTime }) => {
+      try {
         const game = socketData.getGame({ gameId });
 
         if (!game) return;
@@ -193,9 +221,9 @@ module.exports = (server) => {
 
         socketData.updateGame({ gameId, data: game });
         io.to(gameId).emit(SOCKET.gameUpdate, { game, userId });
-      });
+      } catch (err) {
+        console.error(err);
+      }
     });
-  } catch (error) {
-    console.error(error);
-  }
+  });
 };
