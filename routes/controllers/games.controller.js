@@ -40,6 +40,7 @@ exports.sendGames = async (req, res, next) => {
 
       switch (selection) {
         case 'history': {
+
           try {
             const games = await gameService.findByHistory({ ...query, userId: id });
             res.json({ result: RES_RESULT.OK, data: games });
