@@ -33,7 +33,7 @@ Youout은 가상 공간이 아닌 실제 공간을 기반으로 방탈출 게임
 ## Who are we?
 - 죽을 지경 (하**지**현, 박**경**우)
 - 🎹 박경우 : 작곡을 하고 싶었으나 현재는 바닐라코딩 부트캠프 8기 수료생 [Repo link](https://github.com/geewoo94)
-- 📦 하지현: 기획을 하다가 개발이 하고 싶어서 현재는 바닐라코딩 부트캠프 8기 수료생 [Repo link]()
+- 📦 하지현: 기획을 하다가 개발이 하고 싶어서 현재는 바닐라코딩 부트캠프 8기 수료생 [Repo link](https://github.com/theSummerSolstice)
 
 ## Schedule
 - Planning: 2020. 11. 09 ~ 2020. 11. 12
